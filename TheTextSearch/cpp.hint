@@ -1,0 +1,1 @@
+#define TEST(test_case_name, test_name) GTEST_TEST(test_case_name, test_name)
