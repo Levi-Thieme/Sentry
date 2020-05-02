@@ -64,3 +64,45 @@ TEST(getReadCount, GivenALengthGreaterThanMinimum_ReturnsMinimum) {
 
     EXPECT_EQ(minimum, actual);
 }
+
+TEST(offsetAllBy, AddsPositiveOffsetToEveryElement) {
+    int counts[3] = { 1, 2, 3 };
+    int expected[3] = { 2, 3, 4 };
+    int offset = 1;
+
+    offsetAllBy(counts, 0, 3, offset);
+
+    EXPECT_ARRAY_EQ(3, expected, counts);
+}
+
+TEST(offsetAllBy, AddsNegativeOffsetToEveryElement) {
+    int counts[3] = { 1, 2, 3 };
+    int expected[3] = { 0, 1, 2 };
+    int offset = -1;
+
+    offsetAllBy(counts, 0, 3, offset);
+
+    EXPECT_ARRAY_EQ(3, expected, counts);
+}
+
+TEST(offsetAllBy, GivenAStartPosition_OffsetsAllElementsFromStartToLength) {
+    int counts[3] = { 0, 12, 24 };
+    int expected[3] = { 0, 9, 21 };
+    int start = 1;
+    int length = 3;
+    int offset = -3;
+
+    offsetAllBy(counts, start, length, offset);
+
+    EXPECT_ARRAY_EQ(3, expected, counts);
+}
+
+TEST(incrementAllBy, GivenAVectorAndAmount_IncrementsEachElementByAmount) {
+    vector<uint64_t> counts{ 0, 1, 2 };
+    uint16_t amount = 1;
+    vector<uint64_t> expected{ 1, 2, 3 };
+
+    incrementAllBy(counts, amount);
+
+    EXPECT_EQ(expected, counts);
+}

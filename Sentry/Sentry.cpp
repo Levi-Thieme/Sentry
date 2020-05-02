@@ -31,13 +31,14 @@ std::set<int> mpiSearch(string filepath, string pattern, bool verbose) {
 		std::cout << "Filesize: " << filesize << std::endl;
 	}
 
-	vector<size_t> offsetsOfPattern;
+	vector<size_t> currentProcessMatches;
 
 	do {
 		char* textToSend = NULL;
 		int* counts = new int[processCount];
 		int* displacements = new int[processCount];
 		int receiveCount = 0;
+		int displacement = 0;
 		MPI_Request endOfFileRequest;
 
 		if (currentProcess == ROOT_ID)
@@ -48,16 +49,23 @@ std::set<int> mpiSearch(string filepath, string pattern, bool verbose) {
 			charsRead += sendCount;
 			eof = charsRead >= filesize;
 			getSendCountsAndDisplacements(sendCount, processCount, counts, displacements);
+			//Add an overlap of pattern.size() to each count, so that patterns are not missed
+			offsetAllBy(counts, 0, processCount - 1, pattern.size());
 		}
 		//Scatter the receive counts to each processor respectively.
 		MPI_Scatter(counts, 1, MPI_INT, &receiveCount, 1, MPI_INT, ROOT_ID, MPI_COMM_WORLD);
+		//Scatter the displacements to each processor respectively.
+		MPI_Scatter(displacements, 1, MPI_INT, &displacement, 1, MPI_INT, ROOT_ID, MPI_COMM_WORLD);
 
 		//Scatter the text to each process according to the counts and displacements
-		char* receiveBuffer = new char[receiveCount];		
-		if (MPI_Scatterv(textToSend, counts, displacements, MPI_CHAR, receiveBuffer, receiveCount, MPI_CHAR, ROOT_ID, MPI_COMM_WORLD) != MPI_SUCCESS)
-			std::cout << currentProcess << " unsuccessful MPI_Scatter." << std::endl;
+		char* receiveBuffer = new char[receiveCount];
+
+		MPI_Scatterv(textToSend, counts, displacements, MPI_CHAR, receiveBuffer, receiveCount, MPI_CHAR, ROOT_ID, MPI_COMM_WORLD);
 		
-		allOffsetsOfPattern(string(receiveBuffer), pattern, 0, offsetsOfPattern);
+		vector<uint64_t> currentProcessSubstringMatches;
+		allOffsetsOfPattern(string(receiveBuffer), pattern, 0, currentProcessSubstringMatches);
+		incrementAllBy(currentProcessSubstringMatches, displacement);
+		currentProcessMatches.insert(currentProcessMatches.end(), currentProcessSubstringMatches.begin(), currentProcessSubstringMatches.end());
 
 		delete[] textToSend;
 		delete[] counts;
@@ -74,7 +82,7 @@ std::set<int> mpiSearch(string filepath, string pattern, bool verbose) {
 		ifstream.close();
 
 	//Gather the count of offsets from each process, and use it to create the displacements needed for MPI_IGatherv
-	int patternCount = offsetsOfPattern.size();
+	int patternCount = currentProcessMatches.size();
 	int* offsetCounts = NULL;
 	if (currentProcess == ROOT_ID) {
 		offsetCounts = new int[processCount];
@@ -115,7 +123,7 @@ std::set<int> mpiSearch(string filepath, string pattern, bool verbose) {
 	}
 
 	int * offsetsToSend = new int[patternCount];
-	std::copy(offsetsOfPattern.begin(), offsetsOfPattern.end(), offsetsToSend);
+	std::copy(currentProcessMatches.begin(), currentProcessMatches.end(), offsetsToSend);
 
 	MPI_Gatherv(
 		offsetsToSend,
@@ -136,8 +144,10 @@ std::set<int> mpiSearch(string filepath, string pattern, bool verbose) {
 	set<int> uniqueOffsetsOfPattern;
 	delete[] displacements;
 	delete[] offsetCounts;
-	for (int i = 0; i < allOffsetsLength; i++)
+	for (int i = 0; i < allOffsetsLength; i++) {
+		std::cout << gatheredOffsets[i] << " ";
 		uniqueOffsetsOfPattern.insert(gatheredOffsets[i]);
+	}
 	delete[] gatheredOffsets;
 
 	return uniqueOffsetsOfPattern;
@@ -184,4 +194,14 @@ vector<uint64_t> getDisplacements(uint64_t counts[], uint64_t length) {
 		displacements.push_back(offset);
 	}
 	return displacements;
+}
+
+void offsetAllBy(int* counts, int start, int length, int offset) {
+	for (int i = start; i < length; i++)
+		counts[i] += offset;
+}
+
+void incrementAllBy(vector<uint64_t>& counts, uint32_t amount) {
+	for (int i = 0; i < counts.size(); i++)
+		counts[i] += amount;
 }
