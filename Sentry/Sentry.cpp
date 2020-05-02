@@ -145,7 +145,6 @@ std::set<int> mpiSearch(string filepath, string pattern, bool verbose) {
 	delete[] displacements;
 	delete[] offsetCounts;
 	for (int i = 0; i < allOffsetsLength; i++) {
-		std::cout << gatheredOffsets[i] << " ";
 		uniqueOffsetsOfPattern.insert(gatheredOffsets[i]);
 	}
 	delete[] gatheredOffsets;
