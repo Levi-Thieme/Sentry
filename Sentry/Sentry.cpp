@@ -6,7 +6,39 @@
 #include <iostream>
 #include <set>
 
-std::set<int> mpiSearch(string filepath, string pattern, bool verbose) {
+std::set<int> serialSearch(string filepath, string pattern, uint64_t maxReadSize) {
+	ifstream file;
+	file.open(filepath);
+	if (!file) {
+		cerr << "Unable to open " << filepath;
+		return set<int>();
+	}
+
+	file.seekg(0, file.end);
+	streampos endOfFile = file.tellg();
+	file.seekg(0, file.beg);
+	streampos currentPosition = file.tellg();
+
+	set<int> matchOffsets;
+	bool eof = false;
+
+	do {
+		char* text = new char[maxReadSize];
+		int count = getReadCount(endOfFile - currentPosition, maxReadSize);
+		uint64_t readEnd = (uint64_t)currentPosition + count;
+		file.read(text, count);
+		currentPosition += count;
+		findMatches(text, pattern, matchOffsets, currentPosition);
+		delete[] text;
+	} while (currentPosition < endOfFile);
+
+	file.close();
+
+	return matchOffsets;
+}
+
+
+std::set<int> mpiSearch(string filepath, string pattern, uint64_t maxReadSize) {
 	int isInitialized = 0;
 	MPI_Initialized(&isInitialized);
 	if (!isInitialized)
@@ -15,8 +47,6 @@ std::set<int> mpiSearch(string filepath, string pattern, bool verbose) {
 	MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 	MPI_Comm_size(MPI_COMM_WORLD, &processCount);
 	MPI_Comm_rank(MPI_COMM_WORLD, &currentProcess);
-	const uint64_t MinRead = 129536;
-	const uint64_t MinSend = 8096;
 
 	uint64_t sendCount = 0;
 	bool eof = true;
@@ -25,6 +55,11 @@ std::set<int> mpiSearch(string filepath, string pattern, bool verbose) {
 	ifstream ifstream;
 	if (currentProcess == ROOT_ID) {
 		ifstream.open(filepath, ifstream::in);
+		if (!ifstream.is_open()) {
+			std::cout << "Unable to open " << filepath << "." << std::endl;
+			MPI_Finalize();
+			exit(0);
+		}
 		ifstream.seekg(0, ifstream.end);
 		filesize = ifstream.tellg();
 		ifstream.seekg(charsRead, ifstream.beg);
@@ -43,7 +78,7 @@ std::set<int> mpiSearch(string filepath, string pattern, bool verbose) {
 
 		if (currentProcess == ROOT_ID)
 		{
-			sendCount = getReadCount(filesize - charsRead, MinRead);
+			sendCount = getReadCount(filesize - charsRead, maxReadSize);
 			textToSend = new char[sendCount];
 			ifstream.read(textToSend, sendCount);
 			charsRead += sendCount;
@@ -103,13 +138,6 @@ std::set<int> mpiSearch(string filepath, string pattern, bool verbose) {
 		MPI_COMM_WORLD
 	);
 
-	
-	if (currentProcess == ROOT_ID) {
-		for (int i = 0; i < processCount; i++)
-			std::cout << offsetCounts[i] << " ";
-		std::cout << std::endl;
-	}
-
 	int* displacements = NULL;
 	int* gatheredOffsets = NULL;
 	int allOffsetsLength = 0;
@@ -152,8 +180,8 @@ std::set<int> mpiSearch(string filepath, string pattern, bool verbose) {
 	return uniqueOffsetsOfPattern;
 }
 
-int getReadCount(int length, int minimum) {
-	return length < minimum ? length : minimum;
+int getReadCount(int length, int maximum) {
+	return length < maximum ? length : maximum;
 }
 
 void getSendCountsAndDisplacements(int dataSize, int proccessCount, int* counts, int* displacements) {

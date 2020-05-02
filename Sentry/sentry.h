@@ -7,9 +7,10 @@
 using namespace std;
 
 const int ROOT_ID = 0;
-const int SEARCH_RESULTS = 0;
 
-std::set<int> mpiSearch(string filepath, string pattern, bool verbose);
+std::set<int> serialSearch(string filepath, string pattern, uint64_t maxReadSize);
+
+std::set<int> mpiSearch(string filepath, string pattern, uint64_t maxReadSize);
 
 void getSendCountsAndDisplacements(int dataSize, int proccessCount, int * counts, int * displacements);
 
@@ -19,7 +20,7 @@ vector<int> getDisplacements(int counts[], int length);
 
 vector<uint64_t> getDisplacements(uint64_t counts[], uint64_t length);
 
-int getReadCount(int length, int minimum);
+int getReadCount(int length, int maximum);
 
 void offsetAllBy(int* counts, int start, int length, int offset);
 

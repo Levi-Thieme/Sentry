@@ -1,12 +1,15 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <set>
 
 using namespace std;
 
 size_t offsetOfPattern(string text, string pattern, size_t offset);
 
 void allOffsetsOfPattern(string text, string pattern, size_t offset, vector<size_t>& offsets);
+
+void findMatches(string text, string pattern, set<int>& matches, int relativeOffset);
 
 int getOffsetBefore(int offset, int count);
 

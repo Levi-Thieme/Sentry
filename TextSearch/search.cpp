@@ -16,6 +16,15 @@ void allOffsetsOfPattern(string text, string pattern, size_t offset, vector<size
 	}
 }
 
+void findMatches(string text, string pattern, set<int>& matches, int relativeOffset) {
+	int offset = 0;
+	auto matchOffset = offsetOfPattern(text, pattern, 0);
+	while (matchOffset != string::npos) {
+		matches.insert(matchOffset + relativeOffset);
+		matchOffset = offsetOfPattern(text, pattern, ++offset);
+	}
+}
+
 int getOffsetBefore(int offset, int count) {
 	int offsetBefore =  offset - (count + 1) / 2;
 	return offsetBefore >= 0 ? offsetBefore : 0;

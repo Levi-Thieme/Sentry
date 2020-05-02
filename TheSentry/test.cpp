@@ -38,31 +38,31 @@ TEST(getDisplacements, GivenCounts_ReturnsDisplacements) {
     EXPECT_EQ(expectedDisplacements, actualDisplacements);
 }
 
-TEST(getReadCount, GivenALengthLessThanMinimum_ReturnsLength) {
+TEST(getReadCount, GivenALengthLessThanMaximum_ReturnsLength) {
     int length = 0;
-    int minimum = 1;
+    int maximum = 1;
 
-    int actual = getReadCount(length, minimum);
+    int actual = getReadCount(length, maximum);
 
     EXPECT_EQ(length, actual);
 }
 
-TEST(getReadCount, GivenALengthEqualToMinimum_ReturnsMinimum) {
+TEST(getReadCount, GivenALengthEqualToMaximum_ReturnsMaximum) {
     int length = 1;
-    int minimum = length;
+    int maximum = length;
 
-    int actual = getReadCount(length, minimum);
+    int actual = getReadCount(length, maximum);
 
-    EXPECT_EQ(minimum, actual);
+    EXPECT_EQ(maximum, actual);
 }
 
-TEST(getReadCount, GivenALengthGreaterThanMinimum_ReturnsMinimum) {
+TEST(getReadCount, GivenALengthGreaterThanMaximum_ReturnsMaximum) {
     int length = 2;
-    int minimum = 1;
+    int maximum = 1;
 
-    int actual = getReadCount(length, minimum);
+    int actual = getReadCount(length, maximum);
 
-    EXPECT_EQ(minimum, actual);
+    EXPECT_EQ(maximum, actual);
 }
 
 TEST(offsetAllBy, AddsPositiveOffsetToEveryElement) {

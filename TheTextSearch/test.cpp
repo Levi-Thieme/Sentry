@@ -15,7 +15,7 @@ TEST(offsetOfPattern, GivenATextContainingPattern_ReturnsTheOffsetOfPattern) {
     EXPECT_EQ(7, actualOffset);
 }
 
-TEST(allOffsetsOfPattern, GivenATextContainingPattern_ReturnsAllOffsetsOfPattern) {
+TEST(allOffsetsOfPattern, GivenATextContainingPattern_ReturnsAllUniqueOffsetsOfPattern) {
     char text[] = "hi bye hi";
     char pattern[] = "hi";
     vector<size_t> expectedOffsets;
@@ -26,6 +26,29 @@ TEST(allOffsetsOfPattern, GivenATextContainingPattern_ReturnsAllOffsetsOfPattern
     allOffsetsOfPattern(text, pattern, 0, actualOffsets);
 
     EXPECT_EQ(expectedOffsets, actualOffsets);
+}
+
+TEST(findMatches, GivenATextContainingPattern_ReturnsAllUniqueOffsetsOfPattern) {
+    char text[] = "hi bye hi";
+    char pattern[] = "hi";
+    set<int> expected{ 0, 7 };
+    set<int> actual;
+
+    findMatches(text, pattern, actual, 0);
+
+    EXPECT_EQ(expected, actual);
+}
+
+TEST(findMatches, GivenARelativeOffset_ReturnsRelativeOffsetsOfPattern) {
+    char text[] = "hi bye hi";
+    char pattern[] = "hi";
+    int relativeOffset = 2;
+    set<int> expected{ 2, 9 };
+    set<int> actual;
+
+    findMatches(text, pattern, actual, relativeOffset);
+
+    EXPECT_EQ(expected, actual);
 }
 
 TEST(getOffsetBefore, GivenANegativeOffset_ReturnsZero) {
@@ -94,18 +117,6 @@ TEST(getTextAroundOffset, GivenAnOffsetLargerThanInput_ReturnsAnEmptyString) {
     EXPECT_EQ(expected, actual);
 }
 
-TEST(getTextAroundOffset, GivenACountThatIsGreaterThanTheLengthOfTheStream_ReturnsAllStreamContent) {
-    string expected = "012";
-    stringstream sstream(expected);
-    istream& istream = sstream;
-    int offset = 0;
-    int count = expected.length() + 1;
-
-    string actual = getTextAroundOffset(istream, offset, count);
-    
-    EXPECT_EQ(expected, actual);
-}
-
 TEST(getTextAroundOffset, GivenAValidOffsetAndCount_ReturnsAStringCenteredAroundOffsetAndWithALengthOfCount) {
     string text = "hi bill how are you?";
     stringstream sstream(text);
@@ -124,19 +135,6 @@ TEST(toString, ReturnsAStringStartingAtOffsetWithLengthCount) {
     istream& stream = sstream;
     int count = 6;
     string expected = "the th";
-
-    string actual = toString(stream, count);
-
-    EXPECT_EQ(expected, actual);
-}
-
-TEST(toString, GivenACountGreaterThanTheStreamLength_ReturnsAStringWithLengthEqualToStreamLength) {
-    string text = "the the the";
-    stringstream sstream(text);
-    istream& stream = sstream;
-    stream.seekg(0, stream.beg);
-    int count = text.length() + 1;
-    string expected = text;
 
     string actual = toString(stream, count);
 
