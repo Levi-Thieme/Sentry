@@ -7,6 +7,8 @@
 using namespace std;
 
 const int ROOT_ID = 0;
+//4 KB
+const uint64_t DEFAULT_READ_BLOCK_SIZE = 1024 * 4;
 
 std::set<int> serialSearch(string filepath, string pattern, uint64_t maxReadSize);
 

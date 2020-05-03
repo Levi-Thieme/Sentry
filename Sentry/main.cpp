@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
 	int status = 0;
 
 	if (strcmp(argv[1], "mpi") == 0) {
-		std::cout << "Starting parallel search..." << std::endl;
+		//std::cout << "Starting parallel search..." << std::endl;
 		status = parallelDriver(argc, argv);
 	}
 	else if (strcmp(argv[1], "serial") == 0) {
@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
 
 int serialDriver(int argc, char** argv) {
 	string filepath, pattern;
-	uint64_t maxReadSize = 1024 * 64;
+	uint64_t maxReadSize = DEFAULT_READ_BLOCK_SIZE;
 	int status = getArguments(argc, argv, filepath, pattern, maxReadSize);
 	if (status != 0)
 		return status;
@@ -51,7 +51,7 @@ int serialDriver(int argc, char** argv) {
 
 int parallelDriver(int argc, char** argv) {
 	string filepath, pattern;
-	uint64_t maxReadSize = 1024 * 64;
+	uint64_t maxReadSize = DEFAULT_READ_BLOCK_SIZE;
 	int status = getArguments(argc, argv, filepath, pattern, maxReadSize);
 	if (status != 0)
 		return status;

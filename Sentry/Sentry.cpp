@@ -116,7 +116,7 @@ std::set<int> mpiSearch(string filepath, string pattern, uint64_t maxReadSize) {
 	if (ifstream.is_open())
 		ifstream.close();
 
-	//Gather the count of offsets from each process, and use it to create the displacements needed for MPI_IGatherv
+	//Gather the count of offsets from each process, and use it to create the displacements needed for MPI_Gatherv
 	int patternCount = currentProcessMatches.size();
 	int* offsetCounts = NULL;
 	if (currentProcess == ROOT_ID) {
